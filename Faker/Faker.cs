@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -16,6 +17,30 @@ namespace Faker
             LoadTypesFromAssembly(currentAssembly);
         }
 
+        public Faker(string path) : this()
+        {
+            if (Directory.Exists(path))
+            {
+                _pluginPath = path;
+            }
+            else
+            {
+                Directory.CreateDirectory(path);
+            }
+            LoadTypesFromDirectory();
+        }
+        private string _pluginPath = Path.Combine(Directory.GetCurrentDirectory(), "Plugins");
+
+        private void LoadTypesFromDirectory()
+        {
+            var pluginDirectory = new DirectoryInfo(_pluginPath);
+            var pluginFiles = Directory.GetFiles(_pluginPath, "*.dll");
+            foreach (var file in pluginFiles)
+            {
+                var assembly = Assembly.LoadFrom(file);
+                LoadTypesFromAssembly(assembly);
+            }
+        }
         private void LoadTypesFromAssembly(Assembly assembly)
         {
             var types = assembly.GetTypes().Where(type => typeof(IGenerator).IsAssignableFrom(type));
